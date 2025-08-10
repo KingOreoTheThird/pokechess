@@ -173,6 +173,30 @@ const fileLabels = document.getElementById('fileLabels');
 const aiDepthInput = document.getElementById('aiDepth');
 const aiDepthVal = document.getElementById('aiDepthVal');
 aiDepthVal.textContent = aiDepthInput.value;
+/* --- Move sound (requires 'sound.mp3' in same folder) --- */
+const moveSound = new Audio('sound.mp3');
+moveSound.preload = 'auto';
+moveSound.volume = 0.9;
+// Unlock audio on first user gesture so browsers allow future playback
+function unlockAudioOnGesture(){
+  const p = moveSound.play();
+  if(p !== undefined){
+    p.then(()=>{ moveSound.pause(); moveSound.currentTime = 0; }).catch(()=>{});
+  }
+  document.removeEventListener('pointerdown', unlockAudioOnGesture);
+}
+document.addEventListener('pointerdown', unlockAudioOnGesture, {once:true});
+
+function playMoveSound(){
+  try{
+    if(moveSound){
+      moveSound.currentTime = 0;
+      const p = moveSound.play();
+      if(p) p.catch(()=>{});
+    }
+  }catch(e){}
+}
+
 
 /* ========== Helpers ========== */
 function initBoardUI(){
@@ -289,7 +313,7 @@ function onDrop(toSq){
 
 function afterLocalMove(moveObj){
   if(moveObj && moveObj.captured){ captured[ moveObj.color === 'w' ? 'b' : 'w' ].push({type: moveObj.captured}); animateCapture(moveObj.to); }
-  selected = null; legalMoves = []; addMoveToHistory(moveObj); renderAll();
+  selected = null; legalMoves = []; addMoveToHistory(moveObj); playMoveSound(); renderAll();
   if(!game.game_over()) setTimeout(()=> runAIMove(), 120); else updateStatus();
 }
 
@@ -304,7 +328,7 @@ document.querySelectorAll('.promoGrid button').forEach(btn=>{
     const {from,to} = pendingPromotion;
     const res = game.move({from,to,promotion: piece});
     if(res && res.captured) captured[ res.color === 'w' ? 'b' : 'w' ].push({type: res.captured});
-    addMoveToHistory(res); hidePromotionModal(); renderAll(); if(!game.game_over()) setTimeout(()=>runAIMove(),120);
+    addMoveToHistory(res); playMoveSound(); hidePromotionModal(); renderAll(); if(!game.game_over()) setTimeout(()=>runAIMove(),120);
   });
 });
 promoModal.addEventListener('click', (e)=>{ if(e.target===promoModal){ hidePromotionModal(); } });
@@ -404,7 +428,6 @@ async function runAIMove(){
     if(lichessMove){
       const res = game.move(lichessMove);
       if(res){
-        document.getElementById('moveSound').play();
         applied = true;
         if(res.captured) captured[ res.color==='w' ? 'b' : 'w' ].push({type: res.captured});
         addMoveToHistory(res);
@@ -415,9 +438,8 @@ async function runAIMove(){
       const bestLocal = pickBestMoveLocal(new Chess(game.fen()), depth);
       if(bestLocal){
         const res2 = game.move({from: bestLocal.from, to: bestLocal.to, promotion: bestLocal.promotion || 'q'});
-        if(res2 && res2.captured)
-          document.getElementById('moveSound').play(); captured[ res2.color==='w' ? 'b' : 'w' ].push({type: res2.captured});
-        addMoveToHistory(res2);
+        if(res2 && res2.captured) captured[ res2.color==='w' ? 'b' : 'w' ].push({type: res2.captured});
+        addMoveToHistory(res2); playMoveSound();
       } else console.warn('No local move found');
     }
     renderAll();
@@ -437,7 +459,31 @@ document.getElementById('undoFullBtn').addEventListener('click', ()=>{ if(game.h
 document.getElementById('restartBtn').addEventListener('click', ()=>{ game.reset(); captured={w:[],b:[]}; movesEl.innerHTML=''; selected=null; legalMoves=[]; renderAll(); if(game.turn()==='b') setTimeout(runAIMove,200); });
 document.getElementById('flipBtn').addEventListener('click', ()=>{ flipped = !flipped; renderAll(); });
 document.getElementById('themeSel').addEventListener('change', (e)=>{ document.body.classList.remove('theme-wood','theme-marble','theme-dark','theme-retro','theme-poke','theme-classic'); if(e.target.value) document.body.classList.add(e.target.value); });
-document.getElementById('aiDepth').addEventListener('input', ()=>{ aiDepthVal.textContent = aiDepthInput.value; });
+document.getElementById('aiDepth').addEventListener('input', ()=>{ aiDepthVal.textContent = aiDepthInput.value;
+/* --- Move sound (requires 'sound.mp3' in same folder) --- */
+const moveSound = new Audio('sound.mp3');
+moveSound.preload = 'auto';
+moveSound.volume = 0.9;
+// Unlock audio on first user gesture so browsers allow future playback
+function unlockAudioOnGesture(){
+  const p = moveSound.play();
+  if(p !== undefined){
+    p.then(()=>{ moveSound.pause(); moveSound.currentTime = 0; }).catch(()=>{});
+  }
+  document.removeEventListener('pointerdown', unlockAudioOnGesture);
+}
+document.addEventListener('pointerdown', unlockAudioOnGesture, {once:true});
+
+function playMoveSound(){
+  try{
+    if(moveSound){
+      moveSound.currentTime = 0;
+      const p = moveSound.play();
+      if(p) p.catch(()=>{});
+    }
+  }catch(e){}
+}
+ });
 document.getElementById('shinyToggleBtn').addEventListener('click', ()=>{
   // swap which side is shiny
   const tmp = whiteShiny;
@@ -453,6 +499,5 @@ renderAll();
 if(game.turn()==='b') setTimeout(runAIMove,200);
 window._chess = game;
 </script>
-<audio id="moveSound" src="sound.mp3" preload="auto"></audio>
 </body>
 </html>
