@@ -404,6 +404,7 @@ async function runAIMove(){
     if(lichessMove){
       const res = game.move(lichessMove);
       if(res){
+        document.getElementById('moveSound').play();
         applied = true;
         if(res.captured) captured[ res.color==='w' ? 'b' : 'w' ].push({type: res.captured});
         addMoveToHistory(res);
@@ -414,7 +415,8 @@ async function runAIMove(){
       const bestLocal = pickBestMoveLocal(new Chess(game.fen()), depth);
       if(bestLocal){
         const res2 = game.move({from: bestLocal.from, to: bestLocal.to, promotion: bestLocal.promotion || 'q'});
-        if(res2 && res2.captured) captured[ res2.color==='w' ? 'b' : 'w' ].push({type: res2.captured});
+        if(res2 && res2.captured)
+          document.getElementById('moveSound').play(); captured[ res2.color==='w' ? 'b' : 'w' ].push({type: res2.captured});
         addMoveToHistory(res2);
       } else console.warn('No local move found');
     }
@@ -451,5 +453,6 @@ renderAll();
 if(game.turn()==='b') setTimeout(runAIMove,200);
 window._chess = game;
 </script>
+<audio id="moveSound" src="sound.mp3" preload="auto"></audio>
 </body>
 </html>
